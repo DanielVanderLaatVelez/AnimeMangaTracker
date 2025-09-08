@@ -40,5 +40,28 @@ namespace AnimeMangaApi.Controllers
             await _db.SaveChangesAsync();
             return Ok(rating);
         }
+
+        [Authorize]
+        [HttpDelete]
+        public async Task<IActionResult> Delete(RatingDeleteDto dto)
+        {
+            // Get current user id from JWT
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+
+            // Ensure target rating exists
+            var ratingExists = await _db.Ratings.AnyAsync(e => e.Id == dto.RatingId);
+            if (!ratingExists) return NotFound(new { message = "Rating not found." });
+
+            // Get the rating to delete and ensure the rating belongs to the current user
+            var rating = await _db.Ratings
+                                 .FirstOrDefaultAsync(e => e.Id == dto.RatingId && e.AnimeMangaEntryId == dto.AnimeMangaEntryId);
+            if (rating == null) return NotFound(new { message = "Rating not found for the specified entry." });
+            if (rating.UserId != int.Parse(userIdStr)) return Forbid();
+
+            _db.Ratings.Remove(rating);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

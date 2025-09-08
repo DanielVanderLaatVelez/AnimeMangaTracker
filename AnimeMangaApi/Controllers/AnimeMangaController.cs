@@ -22,8 +22,12 @@ namespace AnimeMangaApi.Controllers
         public async Task<IActionResult> GetAll()
         {
             var list = await _db.AnimeMangaEntries
-                                .Select(e => new {
-                                    e.Id, e.Title, e.Type, e.Year,
+                                .Select(e => new
+                                {
+                                    e.Id,
+                                    e.Title,
+                                    e.Type,
+                                    e.Year,
                                     RatingsCount = e.Ratings.Count,
                                     AvgScore = e.Ratings.Count == 0 ? 0 : e.Ratings.Average(r => r.Score)
                                 })
@@ -54,6 +58,19 @@ namespace AnimeMangaApi.Controllers
                                  .FirstOrDefaultAsync(e => e.Id == id);
             if (entry == null) return NotFound();
             return Ok(entry);
+        }
+
+        [Authorize]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteById(int id)
+        {
+            var entry = await _db.AnimeMangaEntries
+                                 .Include(e => e.Ratings)
+                                 .FirstOrDefaultAsync(e => e.Id == id);
+            if (entry == null) return NotFound();
+            _db.AnimeMangaEntries.Remove(entry);
+            await _db.SaveChangesAsync();
+            return NoContent();
         }
     }
 }
