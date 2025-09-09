@@ -35,7 +35,17 @@ namespace AnimeMangaApi.Controllers
             return Ok(list);
         }
 
-        [Authorize]
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var entry = await _db.AnimeMangaEntries
+                                 .Include(e => e.Ratings)
+                                 .FirstOrDefaultAsync(e => e.Id == id);
+            if (entry == null) return NotFound();
+            return Ok(entry);
+        }
+        
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(AnimeMangaCreateDto dto)
         {
@@ -50,17 +60,8 @@ namespace AnimeMangaApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = entry.Id }, entry);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var entry = await _db.AnimeMangaEntries
-                                 .Include(e => e.Ratings)
-                                 .FirstOrDefaultAsync(e => e.Id == id);
-            if (entry == null) return NotFound();
-            return Ok(entry);
-        }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteById(int id)
         {

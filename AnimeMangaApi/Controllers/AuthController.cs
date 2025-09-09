@@ -3,6 +3,7 @@ using AnimeMangaApi.DTOs;
 using AnimeMangaApi.Models;
 using AnimeMangaApi.Services;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,14 +31,15 @@ namespace AnimeMangaApi.Controllers
             var user = new User
             {
                 Username = dto.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Role = "User" // default role
             };
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
             var token = _tokenService.GenerateToken(user);
-            return Ok(new { token, user = new { user.Id, user.Username } });
+            return Ok(new { token, user = new { user.Id, user.Username, user.Role } });
         }
 
         [HttpPost("login")]
@@ -50,7 +52,24 @@ namespace AnimeMangaApi.Controllers
             if (!valid) return Unauthorized(new { message = "Invalid credentials." });
 
             var token = _tokenService.GenerateToken(user);
-            return Ok(new { token, user = new { user.Id, user.Username } });
+            return Ok(new { token, user = new { user.Id, user.Username, user.Role } });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}/role")]
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] string newRole)
+        {
+            var allowedRoles = new[] { "User", "Admin" };
+            if (!allowedRoles.Contains(newRole))
+                return BadRequest(new { message = "Invalid role." });
+
+            var user = await _db.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            user.Role = newRole;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { user.Id, user.Username, user.Role });
         }
     }
 }
