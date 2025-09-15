@@ -61,6 +61,8 @@ namespace AnimeMangaApi.Controllers
             var rating = await _db.Ratings
                                  .FirstOrDefaultAsync(e => e.Id == dto.RatingId && e.AnimeMangaEntryId == dto.AnimeMangaEntryId);
             if (rating == null) return NotFound(new { message = "Rating not found for the specified entry." });
+
+            // If the user is not an admin, ensure they can only delete their own ratings
             if (rating.UserId != int.Parse(userIdStr) && userRole == "User") return Forbid();
 
             _db.Ratings.Remove(rating);

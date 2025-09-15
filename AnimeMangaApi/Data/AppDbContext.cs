@@ -10,6 +10,7 @@ namespace AnimeMangaApi.Data
         public DbSet<User> Users { get; set; }
         public DbSet<AnimeMangaEntry> AnimeMangaEntries { get; set; }
         public DbSet<Rating> Ratings { get; set; }
+        public DbSet<UserList> UserLists { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
