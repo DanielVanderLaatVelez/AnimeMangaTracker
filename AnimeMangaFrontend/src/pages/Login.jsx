@@ -1,19 +1,18 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import api from "../api/axios";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
+  const { login } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
     try {
-      const res = await api.post("/auth/login", {
-        username,
-        password,
-      });
-      setMessage("Login successful! Token: " + res.data.token);
-      // later we’ll save token to context/localStorage
+      const res = await api.post("/auth/login", { username, password });
+      login(res.data.user, res.data.token); // store globally
+      setMessage("Login successful!");
     } catch (err) {
       setMessage(err.response?.data?.message || "Login failed.");
     }
