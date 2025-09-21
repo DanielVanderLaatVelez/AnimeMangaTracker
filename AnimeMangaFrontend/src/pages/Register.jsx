@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Register() {
+  const { login } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     try {
@@ -12,7 +16,11 @@ export default function Register() {
         username,
         password,
       });
-      setMessage("Registered successfully! Token: " + res.data.token);
+
+      login(res.data.user, res.data.token);
+
+      setMessage("Registered successfully!");
+      navigate("/");
     } catch (err) {
       setMessage(err.response?.data?.message || "Registration failed.");
     }

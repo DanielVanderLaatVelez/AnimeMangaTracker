@@ -1,4 +1,5 @@
 import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 
@@ -7,12 +8,14 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
       const res = await api.post("/auth/login", { username, password });
-      login(res.data.user, res.data.token); // store globally
+      login(res.data.user, res.data.token);
       setMessage("Login successful!");
+      navigate("/");
     } catch (err) {
       setMessage(err.response?.data?.message || "Login failed.");
     }
